@@ -1,21 +1,32 @@
 import { useEffect, useState } from "react";
 import { Button } from "./ui/button";
 import { RefreshCcw } from "lucide-react";
-import ConfettiExplosion from "react-confetti-explosion";
+// import useLocalStorage from "@/hooks/useLocalStorage";
+import { useSettings } from "@/store/useSettings";
+// import ConfettiExplosion from "react-confetti-explosion";
 
 function Timer() {
+  // const [restTime, setRestTime] = useLocalStorage<number>("rest", 5);
+  // const [longRest, setLongTime] = useLocalStorage<number>("long_rest", 30);
+  // const [pomodoroTime, setPomodoroTime] = useLocalStorage<number>(
+  //   "pomodoro",
+  //   25
+  // );
+
+  const { pomodoroTime, restTime } = useSettings();
+
   const [start, setStart] = useState(false);
-  const [minutes, setMinutes] = useState(25);
+  const [minutes, setMinutes] = useState(pomodoroTime);
   const [seconds, setSeconds] = useState(0);
 
-  const [startRest, setStartRest] = useState(true);
+  const [startRest, setStartRest] = useState(false);
   const [restMinutes, setRestMinutes] = useState(0);
   const [restSeconds, setRestSeconds] = useState(0);
 
   function startPomodoroTimer() {
     setStartRest(false);
     setStart(true);
-    setMinutes(25);
+    setMinutes(pomodoroTime);
     setSeconds(0);
   }
 
@@ -28,7 +39,7 @@ function Timer() {
 
   function resetPomodoroTimer() {
     setStart(false);
-    setMinutes(25);
+    setMinutes(pomodoroTime);
     setSeconds(0);
   }
 
@@ -38,8 +49,9 @@ function Timer() {
     const timer = setTimeout(() => {
       // Rest Logic
       if (startRest) {
-        if (restMinutes >= 5 && restSeconds >= 0) {
+        if (restMinutes >= restTime && restSeconds >= 0) {
           startPomodoroTimer();
+          setStart(false);
         } else if (restSeconds >= 59) {
           setRestSeconds(0);
           setRestMinutes((prev) => prev + 1);
@@ -97,9 +109,11 @@ function Timer() {
             />
           ))} */}
 
-        <span className="roboto-mono">+05 minutes rest</span>
+        <span className="roboto-mono">
+          +{restTime >= 10 ? restTime : "0" + restTime} Minutes Rest
+        </span>
         <div className="flex gap-6">
-          {start ? (
+          {start && (
             <Button
               className="px-6"
               onClick={() => setStart(false)}
@@ -107,11 +121,20 @@ function Timer() {
             >
               Stop
             </Button>
-          ) : (
+          )}
+
+          {!start && !startRest && (
             <Button className="px-6" onClick={() => setStart(true)}>
               Start Session
             </Button>
           )}
+
+          {!startRest && (
+            <Button className="px-6" onClick={startRestTimer} variant="outline">
+              Take Rest
+            </Button>
+          )}
+
           {startRest && (
             <Button
               className="px-6"
