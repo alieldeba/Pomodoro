@@ -18,7 +18,7 @@ import {
   SelectValue,
 } from "./ui/select";
 import { useSettings } from "@/store/useSettings";
-import { Switch } from "./ui/switch";
+// import { Switch } from "./ui/switch";
 // import useLocalStorage from "@/hooks/useLocalStorage";
 
 function Settings() {
@@ -56,7 +56,7 @@ function Settings() {
               }
             >
               <SelectTrigger className="w-full">
-                <SelectValue placeholder="Select a fruit" />
+                <SelectValue placeholder="Choose your suitable time..." />
               </SelectTrigger>
               <SelectContent>
                 <SelectGroup>
@@ -76,7 +76,7 @@ function Settings() {
               }
             >
               <SelectTrigger className="w-full">
-                <SelectValue placeholder="Select a fruit" />
+                <SelectValue placeholder="Choose your suitable time..." />
               </SelectTrigger>
               <SelectContent>
                 <SelectGroup>
@@ -96,7 +96,7 @@ function Settings() {
               }
             >
               <SelectTrigger className="w-full">
-                <SelectValue placeholder="Select a fruit" />
+                <SelectValue placeholder="Choose your suitable time..." />
               </SelectTrigger>
               <SelectContent>
                 <SelectGroup>
@@ -107,10 +107,10 @@ function Settings() {
               </SelectContent>
             </Select>
           </div>
-          <div className="flex justify-between items-center space-x-2">
+          {/* <div className="flex justify-between items-center space-x-2">
             <Label>Hide Remaining Time</Label>
             <Switch />
-          </div>
+          </div> */}
         </div>
       </DialogContent>
     </Dialog>

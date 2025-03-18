@@ -1,19 +1,36 @@
 import { useEffect, useState } from "react";
 import { Button } from "./ui/button";
 import { RefreshCcw } from "lucide-react";
-// import useLocalStorage from "@/hooks/useLocalStorage";
 import { useSettings } from "@/store/useSettings";
-// import ConfettiExplosion from "react-confetti-explosion";
+import ConfettiExplosion from "react-confetti-explosion";
+import {
+  isPermissionGranted,
+  requestPermission,
+  sendNotification,
+} from "@tauri-apps/plugin-notification";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "./ui/tooltip";
 
 function Timer() {
-  // const [restTime, setRestTime] = useLocalStorage<number>("rest", 5);
-  // const [longRest, setLongTime] = useLocalStorage<number>("long_rest", 30);
-  // const [pomodoroTime, setPomodoroTime] = useLocalStorage<number>(
-  //   "pomodoro",
-  //   25
-  // );
+  const audioRing = document.getElementById("audio-ring") as HTMLAudioElement;
+  const audioSuccess = document.getElementById(
+    "audio-success"
+  ) as HTMLAudioElement;
 
-  const { pomodoroTime, restTime } = useSettings();
+  const { pomodoroTime, restTime, longRestTime } = useSettings();
 
   const [start, setStart] = useState(false);
   const [minutes, setMinutes] = useState(pomodoroTime);
@@ -23,6 +40,25 @@ function Timer() {
   const [restMinutes, setRestMinutes] = useState(0);
   const [restSeconds, setRestSeconds] = useState(0);
 
+  const [pomodoros, setPomodoros] = useState(0);
+
+  const [openAlert, setOpenAlert] = useState(false);
+
+  async function notify(title: string, body: string) {
+    let permissionGranted = await isPermissionGranted();
+
+    // If not we need to request it
+    if (!permissionGranted) {
+      const permission = await requestPermission();
+      permissionGranted = permission === "granted";
+    }
+
+    // Once permission has been granted we can send the notification
+    if (permissionGranted) {
+      sendNotification({ title, body });
+    }
+  }
+
   function startPomodoroTimer() {
     setStartRest(false);
     setStart(true);
@@ -31,6 +67,7 @@ function Timer() {
   }
 
   function startRestTimer() {
+    audioRing.pause();
     setStart(false);
     setStartRest(true);
     setRestMinutes(0);
@@ -38,6 +75,7 @@ function Timer() {
   }
 
   function resetPomodoroTimer() {
+    audioRing.pause();
     setStart(false);
     setMinutes(pomodoroTime);
     setSeconds(0);
@@ -49,7 +87,29 @@ function Timer() {
     const timer = setTimeout(() => {
       // Rest Logic
       if (startRest) {
-        if (restMinutes >= restTime && restSeconds >= 0) {
+        if (pomodoros % 4 === 0) {
+          if (restMinutes >= longRestTime && restSeconds >= 0) {
+            //! The end of long rest time.
+            notify(
+              `Your ${longRestTime} minutes rest has been ended 🥲`,
+              "Time to work Hard. 🔥"
+            );
+            audioSuccess.play();
+            startPomodoroTimer();
+            setStart(false);
+          } else if (restSeconds >= 59) {
+            setRestSeconds(0);
+            setRestMinutes((prev) => prev + 1);
+          } else {
+            setRestSeconds((prev) => prev + 1);
+          }
+        } else if (restMinutes >= restTime && restSeconds >= 0) {
+          //! The end of rest time.
+          notify(
+            `Your ${restTime} rest has been ended 🥲`,
+            "Time to work Hard. 🔥"
+          );
+          audioSuccess.play();
           startPomodoroTimer();
           setStart(false);
         } else if (restSeconds >= 59) {
@@ -61,7 +121,17 @@ function Timer() {
       } else if (start) {
         // Pomodoro Logic
         if (minutes <= 0 && seconds <= 0) {
-          startRestTimer();
+          //! The end of work time.
+          notify(
+            "Horaay! Time for rest.",
+            "Keep working you have completed your work time."
+          );
+          // play sound
+          audioRing.play();
+
+          setPomodoros(pomodoros + 1);
+          // Show dialog says that rest will be played
+          setOpenAlert(true);
         } else if (seconds <= 0) {
           setSeconds(59);
           setMinutes((prev) => prev - 1);
@@ -78,14 +148,37 @@ function Timer() {
     <section className="flex items-center justify-center h-screen">
       <div className="flex flex-col gap-6 items-center justify-center relative">
         {!startRest && (
-          <Button
-            variant="ghost"
-            className="absolute -top-7 -right-7 pl-12 rounded-full"
-            onClick={resetPomodoroTimer}
-          >
-            <RefreshCcw />
-          </Button>
+          <TooltipProvider>
+            <Tooltip>
+              <Button
+                variant="ghost"
+                className="absolute -top-7 -right-7 pl-12 rounded-full"
+                onClick={resetPomodoroTimer}
+                asChild
+              >
+                <TooltipTrigger>
+                  <RefreshCcw />
+                </TooltipTrigger>
+              </Button>
+              <TooltipContent>Reset Timer</TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
         )}
+
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <span
+                className="absolute -top-7 -left-7 p-2 px-4 rounded-full roboto-mono border flex items-center justify-center"
+                onClick={resetPomodoroTimer}
+                title="Pomodoros"
+              >
+                {pomodoros < 10 && pomodoros > 0 ? "0" + pomodoros : pomodoros}
+              </span>
+            </TooltipTrigger>
+            <TooltipContent>Pomodoros</TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
 
         {startRest ? (
           <h1 className="text-9xl roboto-mono">
@@ -99,15 +192,14 @@ function Timer() {
           </h1>
         )}
 
-        {/* {(minutes === 0 && seconds === 0) ||
-          (restMinutes === 5 && restSeconds === 0 && (
-            <ConfettiExplosion
-              force={0.8}
-              duration={3000}
-              particleCount={300}
-              width={1600}
-            />
-          ))} */}
+        {minutes === 0 && seconds === 0 && (
+          <ConfettiExplosion
+            force={0.8}
+            duration={3000}
+            particleCount={300}
+            width={1600}
+          />
+        )}
 
         <span className="roboto-mono">
           +{restTime >= 10 ? restTime : "0" + restTime} Minutes Rest
@@ -129,16 +221,20 @@ function Timer() {
             </Button>
           )}
 
-          {!startRest && (
+          {/* {!startRest && (
             <Button className="px-6" onClick={startRestTimer} variant="outline">
               Take Rest
             </Button>
-          )}
+          )} */}
 
           {startRest && (
             <Button
               className="px-6"
-              onClick={() => setStartRest(false)}
+              onClick={() => {
+                setStartRest(false);
+                startPomodoroTimer();
+                setStart(false);
+              }}
               variant="secondary"
             >
               End Rest
@@ -146,6 +242,26 @@ function Timer() {
           )}
         </div>
       </div>
+      <AlertDialog
+        open={openAlert}
+        onOpenChange={() => setOpenAlert(!openAlert)}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Good Job!</AlertDialogTitle>
+            <AlertDialogDescription>
+              You have completed your {pomodoroTime} session, you can take{" "}
+              {pomodoros % 4 === 0 ? longRestTime : restTime} minutes rest and
+              start over again with new work session.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogAction onClick={startRestTimer}>
+              Start Rest
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </section>
   );
 }
