@@ -10,13 +10,9 @@ function App() {
   return (
     <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
       <ModeSwitch />
-
       <Timer />
-
       <Settings />
-
       <Copywrite />
-
       <Info />
     </ThemeProvider>
   );

@@ -4,11 +4,6 @@ import { RefreshCcw } from "lucide-react";
 import { useSettings } from "@/store/useSettings";
 import ConfettiExplosion from "react-confetti-explosion";
 import {
-  isPermissionGranted,
-  requestPermission,
-  sendNotification,
-} from "@tauri-apps/plugin-notification";
-import {
   AlertDialog,
   AlertDialogAction,
   AlertDialogContent,
@@ -23,6 +18,8 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "./ui/tooltip";
+import useSessionStorage from "@/hooks/useSessionStorage";
+import { notify } from "@/lib/utils";
 
 function Timer() {
   const audioRing = document.getElementById("audio-ring") as HTMLAudioElement;
@@ -40,24 +37,9 @@ function Timer() {
   const [restMinutes, setRestMinutes] = useState(0);
   const [restSeconds, setRestSeconds] = useState(0);
 
-  const [pomodoros, setPomodoros] = useState(0);
-
   const [openAlert, setOpenAlert] = useState(false);
 
-  async function notify(title: string, body: string) {
-    let permissionGranted = await isPermissionGranted();
-
-    // If not we need to request it
-    if (!permissionGranted) {
-      const permission = await requestPermission();
-      permissionGranted = permission === "granted";
-    }
-
-    // Once permission has been granted we can send the notification
-    if (permissionGranted) {
-      sendNotification({ title, body });
-    }
-  }
+  const [pomodoros, setPomodoros] = useSessionStorage<number>("pomodoros", 0);
 
   function startPomodoroTimer() {
     setStartRest(false);
@@ -106,7 +88,7 @@ function Timer() {
         } else if (restMinutes >= restTime && restSeconds >= 0) {
           //! The end of rest time.
           notify(
-            `Your ${restTime} rest has been ended 🥲`,
+            `Your ${restTime} minutes rest has been ended 🥲`,
             "Time to work Hard. 🔥"
           );
           audioSuccess.play();
@@ -170,7 +152,6 @@ function Timer() {
             <TooltipTrigger asChild>
               <span
                 className="absolute -top-7 -left-7 p-2 px-4 rounded-full roboto-mono border flex items-center justify-center"
-                onClick={resetPomodoroTimer}
                 title="Pomodoros"
               >
                 {pomodoros < 10 && pomodoros > 0 ? "0" + pomodoros : pomodoros}
@@ -181,7 +162,7 @@ function Timer() {
         </TooltipProvider>
 
         {startRest ? (
-          <h1 className="text-9xl roboto-mono">
+          <h1 className="text-9xl roboto-mono animate-pulse">
             {restMinutes < 10 ? "0" + restMinutes : restMinutes}:
             {restSeconds < 10 ? "0" + restSeconds : restSeconds}
           </h1>
@@ -202,14 +183,22 @@ function Timer() {
         )}
 
         <span className="roboto-mono">
-          +{restTime >= 10 ? restTime : "0" + restTime} Minutes Rest
+          +
+          {(pomodoros % 4 === 0 || (pomodoros + 1) % 4 === 0) && pomodoros !== 0
+            ? longRestTime >= 10
+              ? longRestTime
+              : "0" + longRestTime
+            : restTime >= 10
+            ? restTime
+            : "0" + restTime}{" "}
+          Minutes Rest
         </span>
         <div className="flex gap-6">
           {start && (
             <Button
               className="px-6"
               onClick={() => setStart(false)}
-              variant="secondary"
+              variant="outline"
             >
               Stop
             </Button>
@@ -217,15 +206,9 @@ function Timer() {
 
           {!start && !startRest && (
             <Button className="px-6" onClick={() => setStart(true)}>
-              Start Session
+              {minutes < pomodoroTime ? "Continue" : "Start Session"}
             </Button>
           )}
-
-          {/* {!startRest && (
-            <Button className="px-6" onClick={startRestTimer} variant="outline">
-              Take Rest
-            </Button>
-          )} */}
 
           {startRest && (
             <Button
@@ -251,8 +234,8 @@ function Timer() {
             <AlertDialogTitle>Good Job!</AlertDialogTitle>
             <AlertDialogDescription>
               You have completed your {pomodoroTime} session, you can take{" "}
-              {pomodoros % 4 === 0 ? longRestTime : restTime} minutes rest and
-              start over again with new work session.
+              {pomodoros % 4 === 0 && pomodoros !== 0 ? longRestTime : restTime}{" "}
+              minutes rest and start over again with new work session.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

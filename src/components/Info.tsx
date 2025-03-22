@@ -31,12 +31,17 @@ function Info() {
                 <DialogHeader>
                   <DialogTitle>Pomodoro Technique</DialogTitle>
                   <DialogDescription>
-                    The Pomodoro Technique is a time management method that
-                    involves breaking work into focused intervals (usually 25
-                    minutes) called "Pomodoros," followed by short breaks
-                    (typically 5 minutes). After completing four Pomodoros, you
-                    take a longer break (15–30 minutes). This technique helps
-                    improve focus, prevent burnout, and boost productivity.
+                    The Pomodoro Technique is a time management method designed
+                    to enhance focus and productivity by breaking work into
+                    intervals. A typical Pomodoro lasts between 25 to 50
+                    minutes, during which you work on a single task without
+                    distractions. Once the timer goes off, you take a short
+                    break of 5 to 10 minutes to recharge. After completing four
+                    Pomodoros, you take a longer break of 15 to 30 minutes
+                    before starting the cycle again. This approach helps
+                    maintain concentration, prevents burnout, and improves
+                    efficiency by balancing intense work periods with regular
+                    rest.
                   </DialogDescription>
                 </DialogHeader>
               </DialogContent>
