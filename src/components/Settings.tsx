@@ -60,7 +60,7 @@ function Settings() {
               </SelectTrigger>
               <SelectContent>
                 <SelectGroup>
-                  <SelectItem value="25">25 Minutes</SelectItem>
+                  <SelectItem value="25">25 Minutes (Recommended)</SelectItem>
                   <SelectItem value="30">30 Minutes</SelectItem>
                   <SelectItem value="35">35 Minutes</SelectItem>
                   <SelectItem value="40">40 Minutes</SelectItem>
@@ -83,7 +83,7 @@ function Settings() {
               </SelectTrigger>
               <SelectContent>
                 <SelectGroup>
-                  <SelectItem value="5">5 Minutes</SelectItem>
+                  <SelectItem value="5">5 Minutes (Recommended)</SelectItem>
                   <SelectItem value="6">6 Minutes</SelectItem>
                   <SelectItem value="7">7 Minutes</SelectItem>
                   <SelectItem value="8">8 Minutes</SelectItem>
@@ -109,8 +109,7 @@ function Settings() {
                   <SelectItem value="15">15 Minutes</SelectItem>
                   <SelectItem value="20">20 Minutes</SelectItem>
                   <SelectItem value="25">25 Minutes</SelectItem>
-                  <SelectItem value="25">25 Minutes</SelectItem>
-                  <SelectItem value="30">30 Minutes</SelectItem>
+                  <SelectItem value="30">30 Minutes (Recommended)</SelectItem>
                 </SelectGroup>
               </SelectContent>
             </Select>

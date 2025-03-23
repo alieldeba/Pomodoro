@@ -10,7 +10,7 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
-export async function notify(title: string, body: string) {
+export async function notify(message: { title: string; body: string }) {
   let permissionGranted = await isPermissionGranted();
 
   // If not we need to request it
@@ -21,6 +21,26 @@ export async function notify(title: string, body: string) {
 
   // Once permission has been granted we can send the notification
   if (permissionGranted) {
-    sendNotification({ title, body });
+    sendNotification(message);
+  }
+}
+
+export function getRandomMessage<T>(messages: T[]): T {
+  const randomIndex = Math.floor(Math.random() * messages.length);
+  return messages[randomIndex];
+}
+
+export function formatNumber(
+  number: number,
+  includeZero: boolean = true
+): string | number {
+  if (number == 0) {
+    return includeZero ? "00" : "0";
+  }
+
+  if (number < 10) {
+    return "0" + number;
+  } else {
+    return number;
   }
 }

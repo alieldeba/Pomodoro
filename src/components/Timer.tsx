@@ -19,7 +19,8 @@ import {
   TooltipTrigger,
 } from "./ui/tooltip";
 import useSessionStorage from "@/hooks/useSessionStorage";
-import { notify } from "@/lib/utils";
+import { formatNumber, getRandomMessage, notify } from "@/lib/utils";
+import { pomodoroMessages, restMessages } from "@/data/messages";
 
 function Timer() {
   const audioRing = document.getElementById("audio-ring") as HTMLAudioElement;
@@ -34,8 +35,9 @@ function Timer() {
   const [seconds, setSeconds] = useState(0);
 
   const [startRest, setStartRest] = useState(false);
-  const [restMinutes, setRestMinutes] = useState(0);
+  const [restMinutes, setRestMinutes] = useState(restTime);
   const [restSeconds, setRestSeconds] = useState(0);
+  const [stopRest, setStopRest] = useState(false);
 
   const [openAlert, setOpenAlert] = useState(false);
 
@@ -52,8 +54,12 @@ function Timer() {
     audioRing.pause();
     setStart(false);
     setStartRest(true);
-    setRestMinutes(0);
     setRestSeconds(0);
+    if (pomodoros % 4 === 0 && pomodoros !== 0) {
+      setRestMinutes(longRestTime);
+    } else {
+      setRestMinutes(restTime);
+    }
   }
 
   function resetPomodoroTimer() {
@@ -68,46 +74,37 @@ function Timer() {
 
     const timer = setTimeout(() => {
       // Rest Logic
-      if (startRest) {
+      if (startRest && !stopRest) {
         if (pomodoros % 4 === 0) {
-          if (restMinutes >= longRestTime && restSeconds >= 0) {
+          if (restMinutes <= 0 && restSeconds <= 0) {
             //! The end of long rest time.
-            notify(
-              `Your ${longRestTime} minutes rest has been ended 🥲`,
-              "Time to work Hard. 🔥"
-            );
+            notify(getRandomMessage(pomodoroMessages));
             audioSuccess.play();
             startPomodoroTimer();
             setStart(false);
-          } else if (restSeconds >= 59) {
-            setRestSeconds(0);
-            setRestMinutes((prev) => prev + 1);
+          } else if (restSeconds <= 0) {
+            setRestSeconds(59);
+            setRestMinutes((prev) => prev - 1);
           } else {
-            setRestSeconds((prev) => prev + 1);
+            setRestSeconds((prev) => prev - 1);
           }
-        } else if (restMinutes >= restTime && restSeconds >= 0) {
+        } else if (restMinutes <= 0 && restSeconds <= 0) {
           //! The end of rest time.
-          notify(
-            `Your ${restTime} minutes rest has been ended 🥲`,
-            "Time to work Hard. 🔥"
-          );
+          notify(getRandomMessage(pomodoroMessages));
           audioSuccess.play();
           startPomodoroTimer();
           setStart(false);
-        } else if (restSeconds >= 59) {
-          setRestSeconds(0);
-          setRestMinutes((prev) => prev + 1);
+        } else if (restSeconds <= 0) {
+          setRestSeconds(59);
+          setRestMinutes((prev) => prev - 1);
         } else {
-          setRestSeconds((prev) => prev + 1);
+          setRestSeconds((prev) => prev - 1);
         }
       } else if (start) {
         // Pomodoro Logic
         if (minutes <= 0 && seconds <= 0) {
           //! The end of work time.
-          notify(
-            "Horaay! Time for rest.",
-            "Keep working you have completed your work time."
-          );
+          notify(getRandomMessage(restMessages));
           // play sound
           audioRing.play();
 
@@ -124,7 +121,7 @@ function Timer() {
     }, 1000);
 
     return () => clearTimeout(timer);
-  }, [start, startRest, minutes, seconds, restMinutes, restSeconds]);
+  }, [start, startRest, minutes, seconds, restMinutes, restSeconds, stopRest]);
 
   return (
     <section className="flex items-center justify-center h-screen">
@@ -150,11 +147,8 @@ function Timer() {
         <TooltipProvider>
           <Tooltip>
             <TooltipTrigger asChild>
-              <span
-                className="absolute -top-7 -left-7 p-2 px-4 rounded-full roboto-mono border flex items-center justify-center"
-                title="Pomodoros"
-              >
-                {pomodoros < 10 && pomodoros > 0 ? "0" + pomodoros : pomodoros}
+              <span className="absolute -top-7 -left-7 p-2 px-4 rounded-full roboto-mono border flex items-center justify-center">
+                {formatNumber(pomodoros, false)}
               </span>
             </TooltipTrigger>
             <TooltipContent>Pomodoros</TooltipContent>
@@ -163,13 +157,11 @@ function Timer() {
 
         {startRest ? (
           <h1 className="text-9xl roboto-mono animate-pulse">
-            {restMinutes < 10 ? "0" + restMinutes : restMinutes}:
-            {restSeconds < 10 ? "0" + restSeconds : restSeconds}
+            {formatNumber(restMinutes)}:{formatNumber(restSeconds)}
           </h1>
         ) : (
           <h1 className="text-9xl roboto-mono">
-            {minutes < 10 ? "0" + minutes : minutes}:
-            {seconds < 10 ? "0" + seconds : seconds}
+            {formatNumber(minutes)}:{formatNumber(seconds)}
           </h1>
         )}
 
@@ -179,18 +171,15 @@ function Timer() {
             duration={3000}
             particleCount={300}
             width={1600}
+            className="absolute"
           />
         )}
 
         <span className="roboto-mono">
           +
-          {(pomodoros % 4 === 0 || (pomodoros + 1) % 4 === 0) && pomodoros !== 0
-            ? longRestTime >= 10
-              ? longRestTime
-              : "0" + longRestTime
-            : restTime >= 10
-            ? restTime
-            : "0" + restTime}{" "}
+          {pomodoros % 4 === 0 && pomodoros !== 0 && startRest
+            ? formatNumber(longRestTime)
+            : formatNumber(restTime)}{" "}
           Minutes Rest
         </span>
         <div className="flex gap-6">
@@ -211,17 +200,40 @@ function Timer() {
           )}
 
           {startRest && (
-            <Button
-              className="px-6"
-              onClick={() => {
-                setStartRest(false);
-                startPomodoroTimer();
-                setStart(false);
-              }}
-              variant="secondary"
-            >
-              End Rest
-            </Button>
+            <>
+              {stopRest ? (
+                <Button
+                  className="px-6"
+                  onClick={() => {
+                    setStopRest(false);
+                  }}
+                >
+                  Continue
+                </Button>
+              ) : (
+                <Button
+                  className="px-6"
+                  onClick={() => {
+                    setStopRest(true);
+                  }}
+                  variant="outline"
+                >
+                  Stop Rest
+                </Button>
+              )}
+
+              <Button
+                className="px-6"
+                onClick={() => {
+                  setStartRest(false);
+                  startPomodoroTimer();
+                  setStart(false);
+                }}
+                variant="outline"
+              >
+                End Rest
+              </Button>
+            </>
           )}
         </div>
       </div>
@@ -233,7 +245,8 @@ function Timer() {
           <AlertDialogHeader>
             <AlertDialogTitle>Good Job!</AlertDialogTitle>
             <AlertDialogDescription>
-              You have completed your {pomodoroTime} session, you can take{" "}
+              You have completed your {pomodoroTime} minutes session, you can
+              take{" "}
               {pomodoros % 4 === 0 && pomodoros !== 0 ? longRestTime : restTime}{" "}
               minutes rest and start over again with new work session.
             </AlertDialogDescription>
