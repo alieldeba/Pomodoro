@@ -358,24 +358,12 @@ export const restMessages = [
     body: "Let your thoughts wander, then come back focused. 🔄",
   },
   {
-    title: "Listen to Music",
-    body: "A quick tune can lift your mood and reset your mind. 🎶",
-  },
-  {
     title: "Digital Detox",
     body: "Step away from the screen for a few minutes. Your eyes will thank you! 👀",
   },
   {
     title: "Daydream a Little",
     body: "Let your mind explore new ideas freely. ☁️",
-  },
-  {
-    title: "Have a Laugh",
-    body: "Watch a funny clip or read a joke—laughter is the best break! 😂",
-  },
-  {
-    title: "Write It Down",
-    body: "Jot down your thoughts or doodle for fun. 📝",
   },
   {
     title: "Change Your Scene",

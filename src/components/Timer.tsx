@@ -175,13 +175,20 @@ function Timer() {
           />
         )}
 
-        <span className="roboto-mono">
-          +
-          {pomodoros % 4 === 0 && pomodoros !== 0 && startRest
-            ? formatNumber(longRestTime)
-            : formatNumber(restTime)}{" "}
-          Minutes Rest
-        </span>
+        {startRest ? (
+          <span className="roboto-mono">
+            Next: {formatNumber(pomodoroTime)} Minutes Work
+          </span>
+        ) : (
+          <span className="roboto-mono">
+            Next:{" "}
+            {(pomodoros + 1) % 4 === 0 && pomodoros !== 0
+              ? formatNumber(longRestTime)
+              : formatNumber(restTime)}{" "}
+            Minutes Rest
+          </span>
+        )}
+
         <div className="flex gap-6">
           {start && (
             <Button
@@ -189,7 +196,7 @@ function Timer() {
               onClick={() => setStart(false)}
               variant="outline"
             >
-              Stop
+              Pause Session
             </Button>
           )}
 
@@ -218,7 +225,7 @@ function Timer() {
                   }}
                   variant="outline"
                 >
-                  Stop Rest
+                  Pause Rest
                 </Button>
               )}
 
