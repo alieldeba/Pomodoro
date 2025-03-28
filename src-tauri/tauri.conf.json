@@ -1,6 +1,6 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
-  "productName": "pomodoro",
+  "productName": "Pomodoro",
   "version": "1.0.0",
   "identifier": "com.pomodoro.app",
   "build": {
@@ -27,6 +27,6 @@
   "bundle": {
     "active": true,
     "targets": "all",
-    "icon": ["icons/logo.png", "icons/icon.ico"]
+    "icon": ["icons/icon.ico", "icons/logo.png"]
   }
 }
